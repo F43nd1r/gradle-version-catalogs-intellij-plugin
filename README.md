@@ -5,4 +5,8 @@ Improved gradle version catalog support including
 - detect unused declarations
 - versions.toml autocompletion
 
-https://plugins.jetbrains.com/plugin/20324-gradle-version-catalogs
+# Download
+[IntelliJ Marketplace](https://plugins.jetbrains.com/plugin/20324-gradle-version-catalogs)
+
+# Acknowledgements
+Parts of this project were created during [off-project-time](https://en.wikipedia.org/wiki/20%25_Project) graciously provided by [codecentric](https://codecentric.de/). Thank you!
