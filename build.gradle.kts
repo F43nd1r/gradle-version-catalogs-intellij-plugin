@@ -25,7 +25,8 @@ intellij {
             "org.jetbrains.idea.reposearch",
             "org.jetbrains.idea.maven",
             "org.jetbrains.plugins.gradle.maven",
-            "org.jetbrains.kotlin"
+            "org.jetbrains.kotlin",
+            "java"
         )
     )
 }
