@@ -33,6 +33,7 @@
     <depends>org.jetbrains.idea.maven</depends>
     <depends>org.jetbrains.plugins.gradle.maven</depends>
     <depends>org.jetbrains.kotlin</depends>
+    <depends>com.intellij.modules.java</depends>
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->

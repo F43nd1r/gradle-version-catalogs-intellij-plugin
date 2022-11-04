@@ -2,10 +2,10 @@ plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.7.10"
     id("org.jetbrains.intellij") version "1.9.0"
+    id("fr.brouillard.oss.gradle.jgitver") version "0.10.0-rc03"
 }
 
 group = "com.faendir"
-version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -47,4 +47,12 @@ tasks {
     runIde {
         jvmArgs("-Xmx8G")
     }
+
+    buildSearchableOptions {
+        enabled = false
+    }
+}
+
+jgitver {
+    regexVersionTag = "v([0-9]+(?:\\.[0-9]+){0,2}(?:-[a-zA-Z0-9\\-_]+)?)"
 }
