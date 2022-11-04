@@ -1,0 +1,98 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.faendir.intellij.gradle-version-catalogs-plugin</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>Gradle Version Catalogs</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="support@faendir.com" url="https://faendir.com">F43nd1r</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[
+    Improved gradle version catalog support including
+    <ul>
+        <li>jump to usage/definition from/to versions.toml and build.gradle.kts</li>
+        <li>detect unused declarations</li>
+        <li>versions.toml autocompletion</li>
+    </ul>
+  ]]></description>
+
+    <idea-version since-build="222" />
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.toml.lang</depends>
+    <depends>com.intellij.gradle</depends>
+    <depends>org.jetbrains.idea.reposearch</depends>
+    <depends>org.jetbrains.idea.maven</depends>
+    <depends>org.jetbrains.plugins.gradle.maven</depends>
+    <depends>org.jetbrains.kotlin</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <psi.referenceContributor language="TOML"
+                                  implementation="com.faendir.intellij.gradleVersionCatalogs.toml.referenceContributor.VersionReferenceContributor"/>
+        <psi.referenceContributor language="TOML"
+                                  implementation="com.faendir.intellij.gradleVersionCatalogs.toml.referenceContributor.LibraryReferenceContributor"/>
+        <completion.contributor language="TOML"
+                                implementationClass="com.faendir.intellij.gradleVersionCatalogs.toml.completion.VersionRefCompletionContributor"/>
+        <completion.contributor language="TOML"
+                                implementationClass="com.faendir.intellij.gradleVersionCatalogs.toml.completion.LibraryCompletionContributor"/>
+        <completion.contributor language="TOML"
+                                implementationClass="com.faendir.intellij.gradleVersionCatalogs.toml.completion.LibraryRefCompletionContributor"/>
+        <findUsagesHandlerFactory implementation="com.faendir.intellij.gradleVersionCatalogs.toml.CatalogDeclarationFindUsagesHandlerFactory"/>
+        <lang.elementManipulator forClass="org.toml.lang.psi.TomlKeySegment" implementationClass="com.faendir.intellij.gradleVersionCatalogs.toml.TomlKeySegmentManipulator"/>
+        <lang.elementManipulator forClass="org.jetbrains.kotlin.psi.KtDotQualifiedExpression"
+                                 implementationClass="com.faendir.intellij.gradleVersionCatalogs.kotlin.KtDotQualifiedExpressionManipulator"/>
+        <elementDescriptionProvider implementation="com.faendir.intellij.gradleVersionCatalogs.toml.CatalogElementDescriptionProvider"/>
+        <usageTypeProvider implementation="com.faendir.intellij.gradleVersionCatalogs.toml.TomlUsageTypeProvider"/>
+        <referencesSearch implementation="com.faendir.intellij.gradleVersionCatalogs.toml.usages.LibraryReferenceSearcher"/>
+        <referencesSearch implementation="com.faendir.intellij.gradleVersionCatalogs.toml.usages.PluginReferenceSearcher"/>
+        <referencesSearch implementation="com.faendir.intellij.gradleVersionCatalogs.toml.usages.VersionReferenceSearcher"/>
+        <referencesSearch implementation="com.faendir.intellij.gradleVersionCatalogs.toml.usages.BundleReferenceSearcher"/>
+        <localInspection language="TOML"
+                         displayName="Unused version declaration"
+                         groupPath="Gradle version catalog"
+                         groupBundle="messages.InspectionsBundle"
+                         groupKey="group.names.declaration.redundancy"
+                         enabledByDefault="true"
+                         level="WEAK WARNING"
+                         implementationClass="com.faendir.intellij.gradleVersionCatalogs.toml.inspection.UnusedVersionInGradleVersionCatalogInspection"
+        />
+        <localInspection language="TOML"
+                         displayName="Unused library declaration"
+                         groupPath="Gradle version catalog"
+                         groupBundle="messages.InspectionsBundle"
+                         groupKey="group.names.declaration.redundancy"
+                         enabledByDefault="true"
+                         level="WEAK WARNING"
+                         implementationClass="com.faendir.intellij.gradleVersionCatalogs.toml.inspection.UnusedLibraryInGradleVersionCatalogInspection"
+        />
+        <localInspection language="TOML"
+                         displayName="Unused plugin declaration"
+                         groupPath="Gradle version catalog"
+                         groupBundle="messages.InspectionsBundle"
+                         groupKey="group.names.declaration.redundancy"
+                         enabledByDefault="true"
+                         level="WEAK WARNING"
+                         implementationClass="com.faendir.intellij.gradleVersionCatalogs.toml.inspection.UnusedPluginInGradleVersionCatalogInspection"
+        />
+        <localInspection language="TOML"
+                         displayName="Unused bundle declaration"
+                         groupPath="Gradle version catalog"
+                         groupBundle="messages.InspectionsBundle"
+                         groupKey="group.names.declaration.redundancy"
+                         enabledByDefault="true"
+                         level="WEAK WARNING"
+                         implementationClass="com.faendir.intellij.gradleVersionCatalogs.toml.inspection.UnusedBundleInGradleVersionCatalogInspection"
+        />
+        <gotoDeclarationHandler implementation="com.faendir.intellij.gradleVersionCatalogs.kotlin.GotoCatalogDeclarationHandler"/>
+    </extensions>
+</idea-plugin>
