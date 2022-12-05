@@ -4,22 +4,10 @@ import com.intellij.patterns.PsiElementPattern
 import com.intellij.patterns.StandardPatterns
 import com.intellij.patterns.VirtualFilePattern
 import com.intellij.psi.PsiWhiteSpace
-import com.intellij.psi.util.childrenOfType
 import org.toml.lang.psi.TomlArray
-import org.toml.lang.psi.TomlElement
-import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlKeyValue
 import org.toml.lang.psi.TomlLiteral
 import org.toml.lang.psi.TomlTable
-import org.toml.lang.psi.TomlValue
-
-fun TomlElement.findVersions(): List<TomlKeyValue>? = (containingFile as? TomlFile)
-    ?.childrenOfType<TomlTable>()?.find { it.isVersionTable() }
-    ?.childrenOfType()
-
-fun TomlElement.findLibraries(): List<TomlKeyValue>? = (containingFile as? TomlFile)
-    ?.childrenOfType<TomlTable>()?.find { it.isLibraryTable() }
-    ?.childrenOfType()
 
 fun TomlTable.isVersionTable() = header.key?.text == "versions"
 

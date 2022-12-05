@@ -1,6 +1,6 @@
 package com.faendir.intellij.gradleVersionCatalogs.toml.completion
 
-import com.faendir.intellij.gradleVersionCatalogs.toml.findVersions
+import com.faendir.intellij.gradleVersionCatalogs.toml.cache.VersionsTomlPsiCache
 import com.faendir.intellij.gradleVersionCatalogs.toml.inVersionsToml
 import com.faendir.intellij.gradleVersionCatalogs.toml.isVersionRef
 import com.intellij.codeInsight.completion.CompletionContributor
@@ -11,6 +11,7 @@ import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
+import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlKeyValue
 import org.toml.lang.psi.TomlLiteral
 
@@ -24,7 +25,8 @@ class VersionRefCompletionContributor : CompletionContributor() {
                     val literal = parameters.position.parent as? TomlLiteral ?: return
                     val keyValue = literal.parent as? TomlKeyValue ?: return
                     if (!keyValue.isVersionRef()) return
-                    val possibleKeys = keyValue.findVersions()?.map { it.key.text } ?: return
+                    val file = keyValue.containingFile as? TomlFile ?: return
+                    val possibleKeys = VersionsTomlPsiCache.getVersionDefinitions(file).map { it.key.text }
                     result.addAllElements(possibleKeys.map { LookupElementBuilder.create(it) })
                 }
             }

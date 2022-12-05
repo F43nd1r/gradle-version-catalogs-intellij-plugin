@@ -1,9 +1,6 @@
 package com.faendir.intellij.gradleVersionCatalogs.kotlin
 
-import com.faendir.intellij.gradleVersionCatalogs.toml.isBundleDef
-import com.faendir.intellij.gradleVersionCatalogs.toml.isLibraryDef
-import com.faendir.intellij.gradleVersionCatalogs.toml.isPluginDef
-import com.faendir.intellij.gradleVersionCatalogs.toml.isVersionDef
+import com.faendir.intellij.gradleVersionCatalogs.toml.cache.VersionsTomlPsiCache
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
@@ -14,7 +11,6 @@ import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.psi.stubs.elements.KtDotQualifiedExpressionElementType
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlKeyValue
-import org.toml.lang.psi.TomlRecursiveVisitor
 import org.toml.lang.psi.ext.elementType
 
 class GotoCatalogDeclarationHandler : GotoDeclarationHandler {
@@ -31,32 +27,39 @@ class GotoCatalogDeclarationHandler : GotoDeclarationHandler {
             }
             if (expression != null) {
                 expression.findPluginAccessor()
-                    ?.let { text -> return project.visitAllVersionsTomlKeyValues { if (it.isPluginDef() && it.key.text == text) it else null }.toTypedArray() }
+                    ?.let { text ->
+                        return project.visitAllVersionsTomlKeyValues(VersionsTomlPsiCache::getPluginDefinitions, text).toTypedArray()
+                    }
                 expression.findVersionAccessor()
-                    ?.let { text -> return project.visitAllVersionsTomlKeyValues { if (it.isVersionDef() && it.key.text == text) it else null }.toTypedArray() }
+                    ?.let { text ->
+                        return project.visitAllVersionsTomlKeyValues(VersionsTomlPsiCache::getVersionDefinitions, text).toTypedArray()
+                    }
                 expression.findLibraryAccessor()
-                    ?.let { text -> return project.visitAllVersionsTomlKeyValues { if (it.isLibraryDef() && it.key.text == text) it else null }.toTypedArray() }
+                    ?.let { text ->
+                        return project.visitAllVersionsTomlKeyValues(VersionsTomlPsiCache::getLibraryDefinitions, text).toTypedArray()
+                    }
                 expression.findBundleAccessor()
-                    ?.let { text -> return project.visitAllVersionsTomlKeyValues { if(it.isBundleDef() && it.key.text == text) it else null }.toTypedArray() }
+                    ?.let { text ->
+                        return project.visitAllVersionsTomlKeyValues(VersionsTomlPsiCache::getBundleDefinitions, text).toTypedArray()
+                    }
             }
         }
         return PsiElement.EMPTY_ARRAY
     }
 }
 
-private fun <T> Project.visitAllVersionsTomlKeyValues(visitor: (element: TomlKeyValue) -> T?): MutableList<T> {
-    val result = mutableListOf<T>()
+private fun Project.visitAllVersionsTomlKeyValues(getKeyValues: (TomlFile) -> List<TomlKeyValue>, search: String): MutableList<TomlKeyValue> {
+    val result = mutableListOf<TomlKeyValue>()
     FilenameIndex.getAllFilesByExt(this, "toml")
         .filter { it.name.endsWith("versions.toml") }
         .map { it.toPsiFile(this) }
         .filterIsInstance<TomlFile>()
         .map { file ->
-            object : TomlRecursiveVisitor() {
-                override fun visitKeyValue(element: TomlKeyValue) {
-                    visitor(element)?.let { result.add(it) }
-                    super.visitKeyValue(element)
+            getKeyValues(file).forEach { element ->
+                if (element.key.text == search) {
+                    result.add(element)
                 }
-            }.visitFile(file)
+            }
         }
     return result
 }

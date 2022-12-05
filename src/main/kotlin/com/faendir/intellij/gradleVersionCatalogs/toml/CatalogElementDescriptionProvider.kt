@@ -14,7 +14,7 @@ class CatalogElementDescriptionProvider : ElementDescriptionProvider {
         return when (location) {
             is UsageViewLongNameLocation -> getText(element)
             is UsageViewTypeLocation -> {
-                val keyValue = element as? TomlKeyValue ?: element.parent as? TomlKeyValue ?: element.parent.parent as? TomlKeyValue
+                val keyValue = element as? TomlKeyValue ?: element.parent as? TomlKeyValue ?: element.parent?.parent as? TomlKeyValue
                 keyValue?.let {
                     when {
                         it.isVersionDef() -> "Catalog Version"
