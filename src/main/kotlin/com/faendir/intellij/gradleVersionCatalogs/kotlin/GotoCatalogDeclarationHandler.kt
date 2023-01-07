@@ -26,22 +26,19 @@ class GotoCatalogDeclarationHandler : GotoDeclarationHandler {
                 }
             }
             if (expression != null) {
-                expression.findPluginAccessor()
-                    ?.let { text ->
-                        return project.visitAllVersionsTomlKeyValues(VersionsTomlPsiCache::getPluginDefinitions, text).toTypedArray()
-                    }
-                expression.findVersionAccessor()
-                    ?.let { text ->
-                        return project.visitAllVersionsTomlKeyValues(VersionsTomlPsiCache::getVersionDefinitions, text).toTypedArray()
-                    }
-                expression.findLibraryAccessor()
-                    ?.let { text ->
-                        return project.visitAllVersionsTomlKeyValues(VersionsTomlPsiCache::getLibraryDefinitions, text).toTypedArray()
-                    }
-                expression.findBundleAccessor()
-                    ?.let { text ->
-                        return project.visitAllVersionsTomlKeyValues(VersionsTomlPsiCache::getBundleDefinitions, text).toTypedArray()
-                    }
+                val potentialAccessor = PotentialAccessor(expression)
+                potentialAccessor.asLibraryAccessor()?.run {
+                    return project.visitAllVersionsTomlKeyValues(VersionsTomlPsiCache::getLibraryDefinitions, id).toTypedArray()
+                }
+                potentialAccessor.asVersionAccessor()?.run {
+                    return project.visitAllVersionsTomlKeyValues(VersionsTomlPsiCache::getVersionDefinitions, id).toTypedArray()
+                }
+                potentialAccessor.asBundleAccessor()?.run {
+                    return project.visitAllVersionsTomlKeyValues(VersionsTomlPsiCache::getBundleDefinitions, id).toTypedArray()
+                }
+                potentialAccessor.asPluginAccessor()?.run {
+                    return project.visitAllVersionsTomlKeyValues(VersionsTomlPsiCache::getPluginDefinitions, id).toTypedArray()
+                }
             }
         }
         return PsiElement.EMPTY_ARRAY
