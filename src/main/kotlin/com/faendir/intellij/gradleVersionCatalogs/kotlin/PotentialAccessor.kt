@@ -1,10 +1,7 @@
 package com.faendir.intellij.gradleVersionCatalogs.kotlin
 
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiType
+import com.intellij.psi.*
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
-import org.jetbrains.plugins.groovy.lang.psi.impl.statements.expressions.TypesUtil
 
 private const val PROVIDER = "org.gradle.api.provider.Provider"
 private const val LIBRARY_DEPENDENCY = "org.gradle.api.artifacts.MinimalExternalModuleDependency"
@@ -21,25 +18,25 @@ class PotentialAccessor(private val element: PsiElement) {
     private val segments by lazy { element.text.replace(Regex("\\s+"), "").split(".").drop(1) }
 
     private fun isLibraryAccessor() = returnType != null && (
-            returnType.extendsFrom(TypesUtil.createGenericType(PROVIDER, element, TypesUtil.createType(LIBRARY_DEPENDENCY, element))) ||
-                    returnType.extendsFrom(TypesUtil.createType(LIBRARY_SUPPLIER, element))
+            returnType.extendsFrom(createGenericType(PROVIDER, element, createType(LIBRARY_DEPENDENCY, element))) ||
+                    returnType.extendsFrom(createType(LIBRARY_SUPPLIER, element))
             )
 
     private fun isVersionAccessor() = returnType != null && (
-            returnType.extendsFrom(TypesUtil.createGenericType(PROVIDER, element, TypesUtil.createType(STRING, element))) ||
-                    returnType.extendsFrom(TypesUtil.createType(VERSION_SUPPLIER, element))
+            returnType.extendsFrom(createGenericType(PROVIDER, element, createType(STRING, element))) ||
+                    returnType.extendsFrom(createType(VERSION_SUPPLIER, element))
             ) &&
             segments.firstOrNull() == "versions"
 
     private fun isBundleAccessor() = returnType != null && (
-            returnType.extendsFrom(TypesUtil.createGenericType(PROVIDER, element, TypesUtil.createType(DEPENDENCY_BUNDLE, element))) ||
-                    returnType.extendsFrom(TypesUtil.createType(BUNDLE_SUPPLIER, element))
+            returnType.extendsFrom(createGenericType(PROVIDER, element, createType(DEPENDENCY_BUNDLE, element))) ||
+                    returnType.extendsFrom(createType(BUNDLE_SUPPLIER, element))
             ) &&
             segments.firstOrNull() == "bundles"
 
     private fun isPluginAccessor() = returnType != null && (
-            returnType.extendsFrom(TypesUtil.createGenericType(PROVIDER, element, TypesUtil.createType(PLUGIN_DEPENDENCY, element))) ||
-                    returnType.extendsFrom(TypesUtil.createType(PLUGIN_SUPPLIER, element))
+            returnType.extendsFrom(createGenericType(PROVIDER, element, createType(PLUGIN_DEPENDENCY, element))) ||
+                    returnType.extendsFrom(createType(PLUGIN_SUPPLIER, element))
             ) &&
             segments.firstOrNull() == "plugins"
 
@@ -52,3 +49,18 @@ class PotentialAccessor(private val element: PsiElement) {
 data class Accessor(val element: PsiElement, val id: String)
 
 fun PsiType.extendsFrom(other: PsiType) = other.isAssignableFrom(this)
+
+fun createGenericType(fqn: String, context: PsiElement, type: PsiType): PsiClassType {
+    val facade = JavaPsiFacade.getInstance(context.project)
+    val resolveScope = context.resolveScope
+    val clazz = facade.findClass(fqn, resolveScope)
+    return if (clazz == null || clazz.typeParameters.size != 1) {
+        facade.elementFactory.createTypeByFQClassName(fqn, resolveScope)
+    } else {
+        facade.elementFactory.createType(clazz, type)
+    }
+}
+
+fun createType(fqn: String, context: PsiElement): PsiClassType {
+    return JavaPsiFacade.getInstance(context.project).elementFactory.createTypeByFQClassName(fqn, context.resolveScope)
+}

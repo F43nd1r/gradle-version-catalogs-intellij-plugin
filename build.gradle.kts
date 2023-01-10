@@ -15,18 +15,15 @@ repositories {
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
     version.set("2022.2.1")
-    type.set("IC") // Target IDE Platform
-    updateSinceUntilBuild.set(false)
+    type.set("IC")
 
     plugins.set(
         listOf(
             "org.toml.lang:222.3739.16",
-            "com.intellij.gradle:222.3739.16",
+            "com.intellij.gradle",
             "org.jetbrains.idea.reposearch",
-            "org.jetbrains.idea.maven",
-            "org.jetbrains.plugins.gradle.maven",
             "org.jetbrains.kotlin",
-            "java"
+            "com.intellij.java"
         )
     )
 }
@@ -51,6 +48,15 @@ tasks {
 
     buildSearchableOptions {
         enabled = false
+    }
+
+    patchPluginXml {
+        sinceBuild.set("222")
+        untilBuild.set("")
+    }
+
+    listProductsReleases {
+        types.addAll("IC", "AI")
     }
 }
 
