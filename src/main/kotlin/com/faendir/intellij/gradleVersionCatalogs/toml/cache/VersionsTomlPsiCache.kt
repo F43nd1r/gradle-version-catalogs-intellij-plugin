@@ -1,18 +1,11 @@
 package com.faendir.intellij.gradleVersionCatalogs.toml.cache
 
+import com.faendir.intellij.gradleVersionCatalogs.VCElementType
 import com.faendir.intellij.gradleVersionCatalogs.toml.isBundleLibraryRef
-import com.faendir.intellij.gradleVersionCatalogs.toml.isBundleTable
-import com.faendir.intellij.gradleVersionCatalogs.toml.isLibraryTable
-import com.faendir.intellij.gradleVersionCatalogs.toml.isPluginsTable
 import com.faendir.intellij.gradleVersionCatalogs.toml.isVersionRef
-import com.faendir.intellij.gradleVersionCatalogs.toml.isVersionTable
 import com.intellij.psi.util.CachedValuesManager.getProjectPsiDependentCache
 import com.intellij.psi.util.childrenOfType
-import org.toml.lang.psi.TomlFile
-import org.toml.lang.psi.TomlKeyValue
-import org.toml.lang.psi.TomlLiteral
-import org.toml.lang.psi.TomlRecursiveVisitor
-import org.toml.lang.psi.TomlTable
+import org.toml.lang.psi.*
 
 object VersionsTomlPsiCache {
     fun getLibraryReferences(file: TomlFile): List<TomlLiteral> = getProjectPsiDependentCache(file) {
@@ -46,19 +39,14 @@ object VersionsTomlPsiCache {
 
     private fun getTables(file: TomlFile): List<TomlTable> = getProjectPsiDependentCache(file) { file.childrenOfType() }
 
-    fun getVersionDefinitions(file: TomlFile): List<TomlKeyValue> = getProjectPsiDependentCache(file) {
-        getTables(file).find { it.isVersionTable() }?.childrenOfType<TomlKeyValue>().orEmpty()
-    }
+    fun getDefinitions(file: TomlFile, type: VCElementType): List<TomlKeyValue> = getAllDefinitions(file)[type].orEmpty()
 
-    fun getLibraryDefinitions(file: TomlFile): List<TomlKeyValue> = getProjectPsiDependentCache(file) {
-        getTables(file).find { it.isLibraryTable() }?.childrenOfType<TomlKeyValue>().orEmpty()
-    }
-
-    fun getPluginDefinitions(file: TomlFile): List<TomlKeyValue> = getProjectPsiDependentCache(file) {
-        getTables(file).find { it.isPluginsTable() }?.childrenOfType<TomlKeyValue>().orEmpty()
-    }
-
-    fun getBundleDefinitions(file: TomlFile): List<TomlKeyValue> = getProjectPsiDependentCache(file) {
-        getTables(file).find { it.isBundleTable() }?.childrenOfType<TomlKeyValue>().orEmpty()
-    }
+    private fun getAllDefinitions(file: TomlFile): Map<VCElementType, List<TomlKeyValue>> =
+        getProjectPsiDependentCache(file) {
+            getTables(file)
+                .associateBy { table -> VCElementType.values().find { table.header.key?.text == it.tableHeader } }
+                .filterKeys { it != null }
+                .mapKeys { (type, _) -> type!! }
+                .mapValues { (_, table) -> table.childrenOfType() }
+        }
 }

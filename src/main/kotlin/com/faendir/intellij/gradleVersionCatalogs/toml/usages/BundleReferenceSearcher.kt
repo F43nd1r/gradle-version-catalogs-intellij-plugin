@@ -1,8 +1,9 @@
 package com.faendir.intellij.gradleVersionCatalogs.toml.usages
 
+import com.faendir.intellij.gradleVersionCatalogs.VCElementType
 import com.faendir.intellij.gradleVersionCatalogs.kotlin.cache.BuildGradleKtsPsiCache
-import com.faendir.intellij.gradleVersionCatalogs.toml.isBundleDef
 import com.faendir.intellij.gradleVersionCatalogs.toml.reference.ResolvedPsiReference
+import com.faendir.intellij.gradleVersionCatalogs.toml.vcElementType
 import com.intellij.openapi.application.ReadAction
 import com.intellij.psi.PsiReference
 import com.intellij.psi.search.FilenameIndex
@@ -22,14 +23,14 @@ class BundleReferenceSearcher : QueryExecutor<PsiReference, ReferencesSearch.Sea
             val searchFor = queryParameters.elementToSearch
             val key = ((searchFor as? TomlKeySegment)?.parent ?: searchFor) as? TomlKey
             val keyValue = (key?.parent ?: searchFor) as? TomlKeyValue
-            if (keyValue?.isBundleDef() == true) {
+            if (keyValue?.vcElementType == VCElementType.BUNDLE) {
                 val text = keyValue.key.text
                 try {
                     FilenameIndex.getAllFilesByExt(queryParameters.project, "kts").filter { it.name == GradleConstants.KOTLIN_DSL_SCRIPT_NAME }
                         .map { it.toPsiFile(queryParameters.project) }
                         .filterIsInstance<KtFile>()
                         .map { file ->
-                            BuildGradleKtsPsiCache.getBundleAccessors(file).filter { it.id == text }
+                            BuildGradleKtsPsiCache.getAccessors(file, VCElementType.BUNDLE).filter { it.id == text }
                                 .forEach { if (!consumer.process(ResolvedPsiReference(it.element, keyValue))) throw StopComputeException() }
                         }
                 } catch (_: StopComputeException) {

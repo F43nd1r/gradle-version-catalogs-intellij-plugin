@@ -10,7 +10,7 @@ class CatalogDeclarationFindUsagesHandlerFactory : FindUsagesHandlerFactory() {
     override fun canFindUsages(element: PsiElement): Boolean {
         val key = element.parent as? TomlKey ?: return false
         val keyValue = key.parent as? TomlKeyValue ?: return false
-        return keyValue.isVersionDef() || keyValue.isPluginDef() || keyValue.isLibraryDef() || keyValue.isBundleDef()
+        return keyValue.vcElementType != null
     }
 
     override fun createFindUsagesHandler(searchFor: PsiElement, forHighlightUsages: Boolean): FindUsagesHandler {

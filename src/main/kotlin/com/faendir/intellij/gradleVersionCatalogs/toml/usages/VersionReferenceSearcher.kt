@@ -1,11 +1,12 @@
 package com.faendir.intellij.gradleVersionCatalogs.toml.usages
 
+import com.faendir.intellij.gradleVersionCatalogs.VCElementType
 import com.faendir.intellij.gradleVersionCatalogs.kotlin.cache.BuildGradleKtsPsiCache
 import com.faendir.intellij.gradleVersionCatalogs.toml.cache.VersionsTomlPsiCache
-import com.faendir.intellij.gradleVersionCatalogs.toml.isVersionDef
 import com.faendir.intellij.gradleVersionCatalogs.toml.reference.ResolvedPsiReference
 import com.faendir.intellij.gradleVersionCatalogs.toml.reference.TomlVersionReference
 import com.faendir.intellij.gradleVersionCatalogs.toml.unquote
+import com.faendir.intellij.gradleVersionCatalogs.toml.vcElementType
 import com.intellij.openapi.application.ReadAction
 import com.intellij.psi.PsiReference
 import com.intellij.psi.search.FilenameIndex
@@ -26,7 +27,7 @@ class VersionReferenceSearcher : QueryExecutor<PsiReference, ReferencesSearch.Se
             val searchFor = queryParameters.elementToSearch
             val key = ((searchFor as? TomlKeySegment)?.parent ?: searchFor) as? TomlKey
             val keyValue = (key?.parent ?: searchFor) as? TomlKeyValue
-            if (keyValue?.isVersionDef() == true) {
+            if (keyValue?.vcElementType == VCElementType.VERSION) {
                 val text = keyValue.key.text
                 val file = searchFor.containingFile
                 try {
@@ -38,7 +39,7 @@ class VersionReferenceSearcher : QueryExecutor<PsiReference, ReferencesSearch.Se
                         .map { it.toPsiFile(queryParameters.project) }
                         .filterIsInstance<KtFile>()
                         .map { ktFile ->
-                            BuildGradleKtsPsiCache.getVersionAccessors(ktFile).filter { it.id == text }
+                            BuildGradleKtsPsiCache.getAccessors(ktFile, VCElementType.VERSION).filter { it.id == text }
                                 .forEach { if (!consumer.process(ResolvedPsiReference(it.element, keyValue))) throw StopComputeException() }
                         }
                 } catch (_: StopComputeException) {

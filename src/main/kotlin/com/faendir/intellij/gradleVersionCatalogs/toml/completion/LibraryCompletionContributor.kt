@@ -1,14 +1,10 @@
 package com.faendir.intellij.gradleVersionCatalogs.toml.completion
 
+import com.faendir.intellij.gradleVersionCatalogs.VCElementType
 import com.faendir.intellij.gradleVersionCatalogs.toml.inVersionsToml
-import com.faendir.intellij.gradleVersionCatalogs.toml.isLibraryDef
 import com.faendir.intellij.gradleVersionCatalogs.toml.isLibraryModuleDef
-import com.intellij.codeInsight.completion.CompletionContributor
-import com.intellij.codeInsight.completion.CompletionParameters
-import com.intellij.codeInsight.completion.CompletionProvider
-import com.intellij.codeInsight.completion.CompletionResultSet
-import com.intellij.codeInsight.completion.CompletionType
-import com.intellij.codeInsight.completion.CompletionUtil
+import com.faendir.intellij.gradleVersionCatalogs.toml.vcElementType
+import com.intellij.codeInsight.completion.*
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressManager
@@ -34,7 +30,7 @@ class LibraryCompletionContributor : CompletionContributor() {
                     val literal = parameters.position.parent as? TomlLiteral ?: return
                     val keyValue = literal.parent as? TomlKeyValue ?: return
                     val withVersion = when {
-                        keyValue.isLibraryDef() -> true
+                        keyValue.vcElementType == VCElementType.LIBRARY -> true
                         keyValue.isLibraryModuleDef() -> false
                         else -> return
                     }

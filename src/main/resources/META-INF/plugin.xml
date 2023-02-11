@@ -91,5 +91,8 @@
                          implementationClass="com.faendir.intellij.gradleVersionCatalogs.toml.inspection.UnusedBundleInGradleVersionCatalogInspection"
         />
         <gotoDeclarationHandler implementation="com.faendir.intellij.gradleVersionCatalogs.kotlin.GotoCatalogDeclarationHandler"/>
+        <codeInsight.inlayProvider
+                language="kotlin"
+                implementationClass="com.faendir.intellij.gradleVersionCatalogs.kotlin.inlayhints.VersionCatalogInlayHintsProvider" />
     </extensions>
 </idea-plugin>

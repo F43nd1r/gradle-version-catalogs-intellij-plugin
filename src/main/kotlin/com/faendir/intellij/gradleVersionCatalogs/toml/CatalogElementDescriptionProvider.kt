@@ -1,5 +1,6 @@
 package com.faendir.intellij.gradleVersionCatalogs.toml
 
+import com.faendir.intellij.gradleVersionCatalogs.VCElementType
 import com.intellij.psi.ElementDescriptionLocation
 import com.intellij.psi.ElementDescriptionProvider
 import com.intellij.psi.PsiElement
@@ -16,12 +17,12 @@ class CatalogElementDescriptionProvider : ElementDescriptionProvider {
             is UsageViewTypeLocation -> {
                 val keyValue = element as? TomlKeyValue ?: element.parent as? TomlKeyValue ?: element.parent?.parent as? TomlKeyValue
                 keyValue?.let {
-                    when {
-                        it.isVersionDef() -> "Catalog Version"
-                        it.isLibraryDef() -> "Catalog Library"
-                        it.isPluginDef() -> "Catalog Plugin"
-                        it.isBundleDef() -> "Catalog Bundle"
-                        else -> null
+                    when (it.vcElementType) {
+                        VCElementType.VERSION -> "Catalog Version"
+                        VCElementType.LIBRARY -> "Catalog Library"
+                        VCElementType.BUNDLE -> "Catalog Bundle"
+                        VCElementType.PLUGIN -> "Catalog Plugin"
+                        null -> null
                     }
                 } ?: getText(element)
             }

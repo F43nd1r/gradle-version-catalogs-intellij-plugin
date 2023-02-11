@@ -1,12 +1,8 @@
 package com.faendir.intellij.gradleVersionCatalogs.toml.inspection
 
-import com.faendir.intellij.gradleVersionCatalogs.toml.isBundleDef
-import com.faendir.intellij.gradleVersionCatalogs.toml.isLibraryDef
-import com.intellij.codeInspection.LocalInspectionTool
-import com.intellij.codeInspection.LocalQuickFix
-import com.intellij.codeInspection.ProblemDescriptor
-import com.intellij.codeInspection.ProblemHighlightType
-import com.intellij.codeInspection.ProblemsHolder
+import com.faendir.intellij.gradleVersionCatalogs.VCElementType
+import com.faendir.intellij.gradleVersionCatalogs.toml.vcElementType
+import com.intellij.codeInspection.*
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.search.searches.ReferencesSearch
@@ -17,19 +13,15 @@ class UnusedBundleInGradleVersionCatalogInspection : LocalInspectionTool() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
         return object : TomlVisitor() {
             override fun visitKeyValue(element: TomlKeyValue) {
-                if (element.isBundleDef() && ReferencesSearch.search(element).none()) {
+                if (element.vcElementType == VCElementType.BUNDLE && ReferencesSearch.search(element).none()) {
                     holder.registerProblem(
                         element,
                         "Bundle '${element.key.text}' is never used",
                         ProblemHighlightType.LIKE_UNUSED_SYMBOL,
                         object : LocalQuickFix {
-                            override fun getFamilyName(): String {
-                                return "Remove bundle '${element.key.text}'"
-                            }
-
-                            override fun applyFix(project: Project, descriptor: ProblemDescriptor) {
-                                element.delete()
-                            }
+                            override fun getName(): String = "Remove bundle '${element.key.text}'"
+                            override fun getFamilyName(): String = "Remove bundle"
+                            override fun applyFix(project: Project, descriptor: ProblemDescriptor) = element.delete()
                         }
                     )
                 }
