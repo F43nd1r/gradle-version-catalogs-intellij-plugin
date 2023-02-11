@@ -15,30 +15,29 @@ private const val BUNDLE_SUPPLIER = "org.gradle.api.internal.catalog.ExternalMod
 private const val PLUGIN_SUPPLIER = "org.gradle.api.internal.catalog.ExternalModuleDependencyFactory.PluginNotationSupplier"
 
 
-
 data class Accessor(val element: PsiElement, val id: String, val type: VCElementType) {
     companion object {
         fun find(element: PsiElement): Accessor? {
             val returnType = element.lastChild.references.map { it.resolve() }.firstIsInstanceOrNull<PsiMethod>()?.returnType ?: return null
-            val segments = element.text.replace(Regex("\\s+"), "").split(".").drop(1)
+            val segments by lazy { element.text.replace(Regex("\\s+"), "").split(".").drop(1) }
             val type = when {
                 returnType.extendsFrom(createGenericType(PROVIDER, element, createType(LIBRARY_DEPENDENCY, element))) ||
                         returnType.extendsFrom(createType(LIBRARY_SUPPLIER, element)) -> VCElementType.LIBRARY
 
-                segments.firstOrNull() == "versions" && (
+                (
                         returnType.extendsFrom(createGenericType(PROVIDER, element, createType(STRING, element))) ||
                                 returnType.extendsFrom(createType(VERSION_SUPPLIER, element))
-                        ) -> VCElementType.VERSION
+                        ) && segments.firstOrNull() == "versions" -> VCElementType.VERSION
 
-                segments.firstOrNull() == "bundles" && (
+                (
                         returnType.extendsFrom(createGenericType(PROVIDER, element, createType(DEPENDENCY_BUNDLE, element))) ||
                                 returnType.extendsFrom(createType(BUNDLE_SUPPLIER, element))
-                        ) -> VCElementType.BUNDLE
+                        ) && segments.firstOrNull() == "bundles" -> VCElementType.BUNDLE
 
-                segments.firstOrNull() == "plugins" && (
+                (
                         returnType.extendsFrom(createGenericType(PROVIDER, element, createType(PLUGIN_DEPENDENCY, element))) ||
                                 returnType.extendsFrom(createType(PLUGIN_SUPPLIER, element))
-                        ) -> VCElementType.PLUGIN
+                        ) && segments.firstOrNull() == "plugins" -> VCElementType.PLUGIN
 
                 else -> return null
             }

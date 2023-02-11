@@ -1,15 +1,11 @@
 package com.faendir.intellij.gradleVersionCatalogs.toml.referenceContributor
 
+import com.faendir.intellij.gradleVersionCatalogs.VCElementType
 import com.faendir.intellij.gradleVersionCatalogs.toml.inVersionsToml
 import com.faendir.intellij.gradleVersionCatalogs.toml.isBundleLibraryRef
-import com.faendir.intellij.gradleVersionCatalogs.toml.reference.TomlLibraryReference
-import com.faendir.intellij.gradleVersionCatalogs.toml.reference.TomlVersionReference
+import com.faendir.intellij.gradleVersionCatalogs.toml.reference.TomlReference
 import com.intellij.patterns.PlatformPatterns
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiReference
-import com.intellij.psi.PsiReferenceContributor
-import com.intellij.psi.PsiReferenceProvider
-import com.intellij.psi.PsiReferenceRegistrar
+import com.intellij.psi.*
 import com.intellij.util.ProcessingContext
 import org.toml.lang.psi.TomlLiteral
 
@@ -20,7 +16,7 @@ class LibraryReferenceContributor : PsiReferenceContributor() {
             object : PsiReferenceProvider() {
                 override fun getReferencesByElement(element: PsiElement, context: ProcessingContext): Array<PsiReference> =
                     if ((element as? TomlLiteral)?.isBundleLibraryRef() == true) {
-                        arrayOf(TomlLibraryReference(element))
+                        arrayOf(TomlReference(element, VCElementType.LIBRARY))
                     } else {
                         PsiReference.EMPTY_ARRAY
                     }

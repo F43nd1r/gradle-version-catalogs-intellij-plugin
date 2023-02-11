@@ -8,7 +8,7 @@ import com.intellij.psi.PsiReferenceBase
 import org.toml.lang.psi.TomlFile
 import org.toml.lang.psi.TomlLiteral
 
-class TomlLibraryReference(element: TomlLiteral) : PsiReferenceBase<TomlLiteral>(element) {
+class TomlReference(element: TomlLiteral, private val type: VCElementType) : PsiReferenceBase<TomlLiteral>(element) {
     private val referencedName = element.text.unquote()
-    override fun resolve(): PsiElement? = (element.containingFile as? TomlFile)?.let { VersionsTomlPsiCache.getDefinitions(it, VCElementType.LIBRARY) }?.find { it.key.text == referencedName }
+    override fun resolve(): PsiElement? = (element.containingFile as? TomlFile)?.let { VersionsTomlPsiCache.getDefinitions(it, type) }?.find { it.key.textMatches(referencedName) }
 }

@@ -13,9 +13,9 @@ object BuildGradleKtsPsiCache {
         val accessors = mutableListOf<Accessor>()
         object : KtTreeVisitorVoid() {
             override fun visitDotQualifiedExpression(expression: KtDotQualifiedExpression) {
-                if (expression.parent !is KtDotQualifiedExpression) {
-                    findAccessor(expression)?.let { accessors.add(it) }
-                }
+                findAccessor(expression)
+                    ?.takeIf { expression.parent !is KtDotQualifiedExpression || findAccessor(expression.parent) == null }
+                    ?.let { accessors.add(it) }
                 super.visitDotQualifiedExpression(expression)
             }
         }.visitFile(f)

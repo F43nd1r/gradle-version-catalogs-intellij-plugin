@@ -4,7 +4,6 @@ import com.faendir.intellij.gradleVersionCatalogs.VCElementType
 import com.intellij.patterns.PsiElementPattern
 import com.intellij.patterns.StandardPatterns
 import com.intellij.patterns.VirtualFilePattern
-import com.intellij.psi.PsiWhiteSpace
 import org.toml.lang.psi.TomlArray
 import org.toml.lang.psi.TomlKeyValue
 import org.toml.lang.psi.TomlLiteral
@@ -19,12 +18,12 @@ fun String.unquote() = when {
 fun PsiElementPattern<*, *>.inVersionsToml(): PsiElementPattern<*, *> =
     inVirtualFile(VirtualFilePattern().withName(StandardPatterns.string().endsWith("versions.toml")))
 
-fun TomlKeyValue.isVersionRef() = key.children.filter { it !is PsiWhiteSpace }.joinToString("") { it.text } == "version.ref"
+fun TomlKeyValue.isVersionRef() = key.textMatches("version.ref")
 
 val TomlKeyValue.vcElementType
-    get() = (parent as? TomlTable)?.header?.key?.text?.let { text -> VCElementType.values().find { text == it.tableHeader } }
+    get() = (parent as? TomlTable)?.header?.key?.let { key -> VCElementType.values().find { key.textMatches(it.tableHeader) } }
 
 fun TomlLiteral.isBundleLibraryRef() =
-    (((parent as? TomlArray)?.parent as? TomlKeyValue)?.parent as? TomlTable)?.let { it.header.key?.text == VCElementType.BUNDLE.tableHeader } == true
+    (((parent as? TomlArray)?.parent as? TomlKeyValue)?.parent as? TomlTable)?.let { it.header.key?.textMatches(VCElementType.BUNDLE.tableHeader) } == true
 
-fun TomlKeyValue.isLibraryModuleDef() = key.children.filter { it !is PsiWhiteSpace }.joinToString("") { it.text } == "module"
+fun TomlKeyValue.isLibraryModuleDef() = key.textMatches("module")

@@ -4,6 +4,7 @@ import com.faendir.intellij.gradleVersionCatalogs.VCElementType
 import com.faendir.intellij.gradleVersionCatalogs.kotlin.cache.BuildGradleKtsPsiCache
 import com.faendir.intellij.gradleVersionCatalogs.kotlin.findInVersionsTomlKeyValues
 import com.faendir.intellij.gradleVersionCatalogs.toml.cache.VersionsTomlPsiCache
+import com.faendir.intellij.gradleVersionCatalogs.toml.isVersionRef
 import com.faendir.intellij.gradleVersionCatalogs.toml.unquote
 import com.faendir.intellij.gradleVersionCatalogs.toml.vcElementType
 import com.intellij.codeInsight.hints.*
@@ -32,11 +33,11 @@ class VersionCatalogInlayHintsProvider : InlayHintsProvider<NoSettings> {
         if (file is KtFile && file.name == GradleConstants.KOTLIN_DSL_SCRIPT_NAME) {
             return object : FactoryInlayHintsCollector(editor) {
                 override fun collect(element: PsiElement, editor: Editor, sink: InlayHintsSink): Boolean {
-                    if (element.elementType is KtDotQualifiedExpressionElementType && BuildGradleKtsPsiCache.findAccessor(element.parent) == null) {
-                        val project = element.project
-                        BuildGradleKtsPsiCache.findAccessor(element)?.run {
-                            val referencedElement =
-                                project.findInVersionsTomlKeyValues({ VersionsTomlPsiCache.getDefinitions(it, type) }, id).firstOrNull()
+                    if (element.elementType is KtDotQualifiedExpressionElementType) {
+                        val accessor = BuildGradleKtsPsiCache.findAccessor(element)
+                        if (accessor != null && BuildGradleKtsPsiCache.findAccessor(element.parent) == null) {
+                            val referencedElement = element.project.findInVersionsTomlKeyValues({ VersionsTomlPsiCache.getDefinitions(it, accessor.type) }, accessor.id)
+                                    .firstOrNull()
                             if (referencedElement != null) {
                                 val referencedValue = referencedElement.value
                                 if (referencedValue != null) {
@@ -68,16 +69,15 @@ class VersionCatalogInlayHintsProvider : InlayHintsProvider<NoSettings> {
     private fun resolvePotentiallyTabledDefinition(referencedValue: TomlValue, moduleTableKey: String) = when (referencedValue) {
         is TomlTable, is TomlInlineTable -> {
             val keys = referencedValue.childrenOfType<TomlKeyValue>()
-            keys.find { it.key.text == moduleTableKey }?.value?.text?.unquote()?.let { module ->
+            keys.find { it.key.textMatches(moduleTableKey) }?.value?.text?.unquote()?.let { module ->
                 (
-                        keys.find { it.key.text == "version" }?.value?.text?.unquote()
-                            ?: keys.find { it.key.text == "version.ref" }?.let { key ->
-                                val search = key.value?.text?.unquote()
+                        keys.find { it.key.textMatches("version") }?.value?.text?.unquote()
+                            ?: keys.find { it.isVersionRef() }?.value?.text?.unquote()?.let { search ->
                                 VersionsTomlPsiCache.getDefinitions(
                                     referencedValue.containingFile as TomlFile,
                                     VCElementType.VERSION
                                 ).find {
-                                    it.key.text == search
+                                    it.key.textMatches(search)
                                 }?.value?.text?.unquote()
                             }
                         )

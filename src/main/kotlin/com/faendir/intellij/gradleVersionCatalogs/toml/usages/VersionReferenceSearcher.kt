@@ -4,7 +4,7 @@ import com.faendir.intellij.gradleVersionCatalogs.VCElementType
 import com.faendir.intellij.gradleVersionCatalogs.kotlin.cache.BuildGradleKtsPsiCache
 import com.faendir.intellij.gradleVersionCatalogs.toml.cache.VersionsTomlPsiCache
 import com.faendir.intellij.gradleVersionCatalogs.toml.reference.ResolvedPsiReference
-import com.faendir.intellij.gradleVersionCatalogs.toml.reference.TomlVersionReference
+import com.faendir.intellij.gradleVersionCatalogs.toml.reference.TomlReference
 import com.faendir.intellij.gradleVersionCatalogs.toml.unquote
 import com.faendir.intellij.gradleVersionCatalogs.toml.vcElementType
 import com.intellij.openapi.application.ReadAction
@@ -28,18 +28,17 @@ class VersionReferenceSearcher : QueryExecutor<PsiReference, ReferencesSearch.Se
             val key = ((searchFor as? TomlKeySegment)?.parent ?: searchFor) as? TomlKey
             val keyValue = (key?.parent ?: searchFor) as? TomlKeyValue
             if (keyValue?.vcElementType == VCElementType.VERSION) {
-                val text = keyValue.key.text
                 val file = searchFor.containingFile
                 try {
                     if (file is TomlFile) {
-                        VersionsTomlPsiCache.getVersionReferences(file).filter { it.text.unquote() == text }
-                            .forEach { if (!consumer.process(TomlVersionReference(it))) throw StopComputeException() }
+                        VersionsTomlPsiCache.getVersionReferences(file).filter { keyValue.key.textMatches(it.text.unquote()) }
+                            .forEach { if (!consumer.process(TomlReference(it, VCElementType.VERSION))) throw StopComputeException() }
                     }
                     FilenameIndex.getAllFilesByExt(queryParameters.project, "kts").filter { it.name == GradleConstants.KOTLIN_DSL_SCRIPT_NAME }
                         .map { it.toPsiFile(queryParameters.project) }
                         .filterIsInstance<KtFile>()
                         .map { ktFile ->
-                            BuildGradleKtsPsiCache.getAccessors(ktFile, VCElementType.VERSION).filter { it.id == text }
+                            BuildGradleKtsPsiCache.getAccessors(ktFile, VCElementType.VERSION).filter { keyValue.key.textMatches(it.id) }
                                 .forEach { if (!consumer.process(ResolvedPsiReference(it.element, keyValue))) throw StopComputeException() }
                         }
                 } catch (_: StopComputeException) {

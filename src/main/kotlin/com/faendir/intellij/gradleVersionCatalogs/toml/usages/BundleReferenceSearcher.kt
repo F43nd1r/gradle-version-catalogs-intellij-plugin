@@ -24,13 +24,12 @@ class BundleReferenceSearcher : QueryExecutor<PsiReference, ReferencesSearch.Sea
             val key = ((searchFor as? TomlKeySegment)?.parent ?: searchFor) as? TomlKey
             val keyValue = (key?.parent ?: searchFor) as? TomlKeyValue
             if (keyValue?.vcElementType == VCElementType.BUNDLE) {
-                val text = keyValue.key.text
                 try {
                     FilenameIndex.getAllFilesByExt(queryParameters.project, "kts").filter { it.name == GradleConstants.KOTLIN_DSL_SCRIPT_NAME }
                         .map { it.toPsiFile(queryParameters.project) }
                         .filterIsInstance<KtFile>()
                         .map { file ->
-                            BuildGradleKtsPsiCache.getAccessors(file, VCElementType.BUNDLE).filter { it.id == text }
+                            BuildGradleKtsPsiCache.getAccessors(file, VCElementType.BUNDLE).filter { keyValue.key.textMatches(it.id) }
                                 .forEach { if (!consumer.process(ResolvedPsiReference(it.element, keyValue))) throw StopComputeException() }
                         }
                 } catch (_: StopComputeException) {
