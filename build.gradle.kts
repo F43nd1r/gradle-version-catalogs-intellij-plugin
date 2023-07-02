@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.8.22"
-    id("org.jetbrains.intellij") version "1.14.1"
+    id("org.jetbrains.intellij") version "1.14.2"
     id("fr.brouillard.oss.gradle.jgitver") version "0.10.0-rc03"
 }
 
