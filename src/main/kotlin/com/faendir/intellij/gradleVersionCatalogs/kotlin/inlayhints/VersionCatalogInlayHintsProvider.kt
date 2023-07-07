@@ -37,7 +37,7 @@ class VersionCatalogInlayHintsProvider : InlayHintsProvider<NoSettings> {
                         val accessor = BuildGradleKtsPsiCache.findAccessor(element)
                         if (accessor != null && BuildGradleKtsPsiCache.findAccessor(element.parent) == null) {
                             val referencedElement = element.project.findInVersionsTomlKeyValues({ VersionsTomlPsiCache.getDefinitions(it, accessor.type) }, accessor.id)
-                                    .firstOrNull()
+                                .firstOrNull()
                             if (referencedElement != null) {
                                 val referencedValue = referencedElement.value
                                 if (referencedValue != null) {
@@ -91,7 +91,12 @@ class VersionCatalogInlayHintsProvider : InlayHintsProvider<NoSettings> {
     private fun resolvePotentiallyTabledDefinition(referencedValue: TomlValue, moduleTableKey: String) = when (referencedValue) {
         is TomlTable, is TomlInlineTable -> {
             val keys = referencedValue.childrenOfType<TomlKeyValue>()
-            keys.find { it.key.textMatches(moduleTableKey) }?.value?.text?.unquote()?.let { module ->
+            val identifier = if (referencedValue.text.contains(moduleTableKey)) {
+                keys.find { it.key.textMatches(moduleTableKey) }?.value?.text?.unquote()
+            } else {
+                keys.filterNot { it.text.contains("version") }.joinToString(":") { it.value?.text?.unquote().orEmpty() }
+            }
+            identifier?.let { module ->
                 (
                         keys.find { it.key.textMatches("version") }?.value?.text?.unquote()
                             ?: keys.find { it.isVersionRef() }?.value?.text?.unquote()?.let { search ->
