@@ -45,6 +45,7 @@ class VersionCatalogInlayHintsProvider : InlayHintsProvider<NoSettings> {
                                         VCElementType.LIBRARY -> resolvePotentiallyTabledDefinition(referencedValue, "module")
                                         VCElementType.VERSION -> referencedValue.text?.unquote()
                                         VCElementType.PLUGIN -> resolvePotentiallyTabledDefinition(referencedValue, "id")
+                                        VCElementType.BUNDLE -> resolveBundlesDefinition(referencedValue)
                                         else -> null
                                     }
                                     if (inlayText != null) {
@@ -64,6 +65,27 @@ class VersionCatalogInlayHintsProvider : InlayHintsProvider<NoSettings> {
             }
         }
         return null
+    }
+
+    /**
+     * handle the definition of libs.bundles.xxx
+     *
+     * @since 1.3.2
+     */
+    private fun resolveBundlesDefinition(referencedValue: TomlValue): String? {
+        return if (referencedValue is TomlArray) {
+            val size = referencedValue.elements.size
+            referencedValue.elements.take(3).mapNotNull { value ->
+                VersionsTomlPsiCache.getDefinitions(
+                    referencedValue.containingFile as TomlFile,
+                    VCElementType.LIBRARY
+                ).find {
+                    it.key.textMatches(value.text.unquote())
+                }?.value?.let {
+                    resolvePotentiallyTabledDefinition(it, "module")
+                }
+            }.joinToString(separator = "➕", postfix = if (size > 3) "..." else "")
+        } else null
     }
 
     private fun resolvePotentiallyTabledDefinition(referencedValue: TomlValue, moduleTableKey: String) = when (referencedValue) {
