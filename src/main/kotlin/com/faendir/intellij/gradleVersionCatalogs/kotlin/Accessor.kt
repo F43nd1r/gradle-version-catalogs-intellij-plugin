@@ -2,6 +2,7 @@ package com.faendir.intellij.gradleVersionCatalogs.kotlin
 
 import com.faendir.intellij.gradleVersionCatalogs.VCElementType
 import com.intellij.psi.*
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 
 private const val PROVIDER = "org.gradle.api.provider.Provider"
@@ -15,11 +16,22 @@ private const val BUNDLE_SUPPLIER = "org.gradle.api.internal.catalog.ExternalMod
 private const val PLUGIN_SUPPLIER = "org.gradle.api.internal.catalog.ExternalModuleDependencyFactory.PluginNotationSupplier"
 
 
+@Suppress("SpellCheckingInspection")
 data class Accessor(val element: PsiElement, val id: String, val type: VCElementType) {
     companion object {
         fun find(element: PsiElement): Accessor? {
-            val returnType = element.lastChild.references.map { it.resolve() }.firstIsInstanceOrNull<PsiMethod>()?.returnType ?: return null
-            val segments by lazy { element.text.replace(Regex("\\s+"), "").split(".").drop(1) }
+            val references = if (element.lastChild.references.mapNotNull(PsiReference::resolve).isEmpty()) {
+                element.lastChild.firstChild.references
+            } else element.lastChild.references
+            val returnType = references.map { it.resolve() }.firstIsInstanceOrNull<PsiMethod>()?.returnType ?: return null
+            val segments by lazy { element.text.replace(Regex("\\s+"), "").split(".").drop(1)
+                // e.g. libs.map.get3dmap() -> [libs, map, get3dmap()] -> [map, get3dmap()] -> [map, 3dmap]
+                .map {
+                    it.applyIf(it.matches(Regex("^get.*\\(\\s*\\)\$"))) {
+                        removePrefix("get").removeSuffix("()")
+                    }
+                }
+            }
             val type = when {
                 returnType.extendsFrom(createGenericType(PROVIDER, element, createType(LIBRARY_DEPENDENCY, element))) ||
                         returnType.extendsFrom(createType(LIBRARY_SUPPLIER, element)) -> VCElementType.LIBRARY
