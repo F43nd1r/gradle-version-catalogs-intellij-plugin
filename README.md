@@ -1,5 +1,8 @@
 # Gradle Version Catalogs IntelliJ Plugin
 
+>[!Warning]
+> This project is no longer needed, both [IntelliJ](https://blog.jetbrains.com/idea/2024/06/intellij-idea-2024-2-eap-6/#improved-experience-with-gradle-build-scripts) and [Android Studio](https://developer.android.com/studio/preview/features#gradle-version-catalogs) bundle version catalog support.
+
 Improved gradle version catalog support including
 
 - jump to usage/definition from/to versions.toml and build.gradle.kts
@@ -9,11 +12,6 @@ Improved gradle version catalog support including
 # Download
 
 [IntelliJ Marketplace](https://plugins.jetbrains.com/plugin/20324-gradle-version-catalogs)
-
-# Note on Future Development
-
-Android Studio is already rolling out [builtin support for Version Catalogs](https://developer.android.com/studio/preview/features#gradle-version-catalogs). This plugin will be
-discontinued once IntelliJ IDEA gets those features as well.
 
 # Acknowledgements
 
